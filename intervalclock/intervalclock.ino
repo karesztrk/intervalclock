@@ -5,6 +5,7 @@
 #include <ESP8266WebServer.h>
 #include "Font_Regular.h"
 #include "Font_3x7.h"
+#include "Html_page.h"
 
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW 
 #define MAX_ZONES 2
@@ -31,47 +32,10 @@ unsigned int countWork = 0;
 unsigned int countRest = 0;
 unsigned int countInterval = 30;
 
-const char MAIN_page[] = R"=====(
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
-</head>
-<body>
- 
-<h1>Interval timer</h1>
- 
-<form action="/start" method="POST">
-  <div>
-    <label>Prepare</label>
-    <input type="number" name="prepare" value="0">
-  </div>
-  <div>
-    <label>Number of intervals</label>
-    <input type="number" name="intervals" value="1">
-  </div>
-  <div>
-    <label>Work</label>
-    <input type="number" name="work" value="20">
-  </div>
-  <div>
-    <label>Rest</label>
-    <input type="number" name="rest" value="10">
-  </div>
-  <div>
-    <input type="submit" value="Submit">
-  </div>
-</form> 
- 
-</body>
-</html>
-)=====";
-
 void setup(){
   parola.begin(MAX_ZONES);
-  parola.setIntensity(4); 
-  
+  parola.setIntensity(4);
+
   parola.setZone(0, 0, 2); // timer
   parola.setZone(1, 3, 3); // counter
 
@@ -81,7 +45,7 @@ void setup(){
 
   parola.displayZoneText(0, displayTime, PA_RIGHT, 0, 0, PA_PRINT, PA_NO_EFFECT);
   parola.displayZoneText(1, displayInterval, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
-  
+
   WiFi.begin(ssid, password);
   Serial.begin(115200);
   delay(10);
@@ -91,12 +55,12 @@ void setup(){
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  
+
   Serial.println("");
   Serial.println("WiFi connected");
   // Print the IP address
@@ -120,9 +84,8 @@ void handleStart() {
  int rest = server.hasArg("rest") ? server.arg("rest").toInt() : 0; 
 
  startTimer(prepare, work, rest);
- 
- String s = MAIN_page;
- server.send(200, "text/html", s);
+
+ server.send(200);
 }
 
 void handleNotFound() {
@@ -147,7 +110,7 @@ void loop() {
   static uint32_t lastTime = millis();
   static uint8_t curZone = 0;
 
-  if (isTimerStarted()) {
+  if (!isTimerStarted()) {
     return;
   }
 
