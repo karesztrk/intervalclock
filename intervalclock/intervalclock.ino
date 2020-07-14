@@ -17,8 +17,8 @@
 MD_Parola parola = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES); // Software spi
 ESP8266WebServer server;
 
-const char* ssid = "Csokimaz";
-const char* password = "alpha12345";
+const char* ssid     = "ESP8266-Access-Point";
+const char* password = "123456789";
 
 uint8_t curText;
 char displayTime[9];    // mm:ss\0
@@ -46,26 +46,17 @@ void setup(){
   parola.displayZoneText(0, displayTime, PA_RIGHT, 0, 0, PA_PRINT, PA_NO_EFFECT);
   parola.displayZoneText(1, displayInterval, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
 
-  WiFi.begin(ssid, password);
+  WiFi.softAP(ssid, password, 5, false, 2);
   Serial.begin(115200);
   delay(10);
 
   // Connect to WiFi network
   Serial.println();
   Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  // Print the IP address
-  Serial.println("IP address");
-  Serial.println(WiFi.localIP());
+  Serial.println("Establishing Wifi Access Point...");
+  IPAddress ip = WiFi.softAPIP();
+  Serial.print("Acess Point IP address: ");
+  Serial.println(ip);
 
   server.on("/", HTTP_GET, handleIndex);
   server.on("/start", HTTP_POST, handleStart);
