@@ -78,7 +78,7 @@ const char MAIN_page[] = R"=====(
         }
 
         .tab-button {
-            padding: 0.25rem 1rem;
+            padding: 0.5rem 1.75rem;
             border-style: none;
             transition-duration: .2s;
             transition-property: all;
@@ -182,15 +182,31 @@ const char MAIN_page[] = R"=====(
         }
 
         .start-button {
+            margin: 0 0.5rem;
             padding: 0.5rem 2rem;
             border-style: none;
             color: #fff;
-            margin: 0 auto;
             font-size: 1.125rem;
             display: flex;
             border-width: 0;
             border-radius: .25rem;
             background-color: #667eea;
+            line-height: inherit;
+            cursor: pointer;
+            background-image: none;
+            -webkit-appearance: button;
+            text-transform: none;
+            overflow: visible;
+            font-family: inherit;
+        }
+
+        .stop-button {
+            margin: 0 0.5rem;
+            padding: 0.5rem 2rem;
+            border: solid 2px #667eea;
+            font-size: 1.125rem;
+            display: flex;
+            border-radius: .25rem;
             line-height: inherit;
             cursor: pointer;
             background-image: none;
@@ -239,6 +255,11 @@ const char MAIN_page[] = R"=====(
         .toast-description {
             color: #a0aec0;
             display: block;
+        }
+
+        .action-group {
+            display: flex;
+            justify-content: center;
         }
 
     </style>
@@ -300,9 +321,12 @@ const char MAIN_page[] = R"=====(
                         </button>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group action-group">
                     <button id="start-button" class="start-button">
                         Go!
+                    </button>
+                    <button id="stop-button" class="stop-button">
+                        Stop
                     </button>
                 </div>
             </div>
@@ -326,6 +350,7 @@ const char MAIN_page[] = R"=====(
 </div>
 <script type="text/javascript">
   document.getElementById('start-button').onclick = sendData;
+  document.getElementById('stop-button').onclick = sendStop;
 
   document.querySelectorAll('.tab-button').forEach(button => {
     button.onclick = switchTab;
@@ -385,8 +410,8 @@ const char MAIN_page[] = R"=====(
     }
   }
 
-  async function post(data = {}) {
-    return await fetch('/start', {
+  async function post(url, data = {}) {
+    return await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -415,13 +440,17 @@ const char MAIN_page[] = R"=====(
       }
     }
 
-    post(data).then(data => {
+    post('/start', data).then(data => {
       showSuccessToast();
       console.log(data);
     }).catch((error) => {
       console.error(error);
     });
 
+  }
+
+  function sendStop() {
+    post('/stop');
   }
 
   function showSuccessToast() {

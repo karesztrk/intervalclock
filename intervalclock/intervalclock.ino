@@ -69,6 +69,7 @@ void setup(){
 
   server.on("/", HTTP_GET, handleIndex);
   server.on("/start", HTTP_POST, handleStart);
+  server.on("/stop", HTTP_POST, handleStop);
   server.onNotFound(handleNotFound);
   server.begin();
 }
@@ -88,6 +89,11 @@ void handleStart() {
  server.send(200);
 }
 
+void handleStop() {
+ stopTimer();
+ server.send(200);
+}
+
 void handleNotFound() {
   server.sendHeader("Location", "/", true);
   server.send(302, "text/plane",""); 
@@ -103,6 +109,11 @@ void startTimer(int prepare, int work, int rest) {
   countRest = rest;
   countInterval = work + rest;
   started = true;
+}
+
+void stopTimer() {
+  started = false;
+  parola.displayClear();
 }
 
 void loop() {
