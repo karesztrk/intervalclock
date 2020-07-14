@@ -3,7 +3,6 @@ const char MAIN_page[] = R"=====(
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
     <title>Interval timer</title>
     <style>
@@ -11,6 +10,10 @@ const char MAIN_page[] = R"=====(
         html {
             font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
             line-height: 1.5;
+        }
+
+        body {
+            height: 100vh;
         }
 
         *, ::after, ::before {
@@ -23,12 +26,6 @@ const char MAIN_page[] = R"=====(
         section {
             position: relative;
             color: #4a5568;
-        }
-
-        .container {
-            width: 100%;
-            margin: 0 auto;
-            padding: 6rem 1.25rem 6rem 1.25rem;
         }
 
         .header {
@@ -91,6 +88,7 @@ const char MAIN_page[] = R"=====(
             font-family: inherit;
             font-size: 100%;
             margin: 0;
+            background-color: white;
         }
 
         .selected-tab {
@@ -126,7 +124,7 @@ const char MAIN_page[] = R"=====(
             display: flex;
             border-width: 1px;
             border-radius: .5rem;
-            border-color: #cbd5e0;
+            border-color: #667eea;
         }
 
         .spinner-button {
@@ -214,6 +212,7 @@ const char MAIN_page[] = R"=====(
             text-transform: none;
             overflow: visible;
             font-family: inherit;
+            background-color: white;
         }
 
         .toast {
@@ -260,6 +259,7 @@ const char MAIN_page[] = R"=====(
         .action-group {
             display: flex;
             justify-content: center;
+            margin-top: 2rem;
         }
 
     </style>
@@ -287,7 +287,7 @@ const char MAIN_page[] = R"=====(
                         <button id="decrement-prepare" class="spinner-button decrement-button prepare-button">
                             <span>-</span>
                         </button>
-                        <input id="prepare" class="spinner-input" name="prepare" value="0" />
+                        <input id="prepare" class="spinner-input" name="prepare" value="20" />
                         <button id="increment-prepare" class="spinner-button increment-button prepare-button">
                             <span>+</span>
                         </button>
@@ -301,7 +301,7 @@ const char MAIN_page[] = R"=====(
                         <button id="decrement-work" class="spinner-button decrement-button work-button">
                             <span>-</span>
                         </button>
-                        <input id="work" class="spinner-input" name="work" value="0" />
+                        <input id="work" class="spinner-input" name="work" value="20" />
                         <button id="increment-work" class="spinner-button increment-button work-button">
                             <span>+</span>
                         </button>
@@ -315,7 +315,7 @@ const char MAIN_page[] = R"=====(
                         <button class="spinner-button decrement-button rest-button">
                             <span>-</span>
                         </button>
-                        <input id="rest" class="spinner-input" name="rest" value="0" />
+                        <input id="rest" class="spinner-input" name="rest" value="10" />
                         <button class="spinner-button increment-button rest-button">
                             <span>+</span>
                         </button>

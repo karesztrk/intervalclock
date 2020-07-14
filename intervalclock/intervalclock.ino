@@ -113,13 +113,16 @@ void startTimer(int prepare, int work, int rest) {
 
 void stopTimer() {
   started = false;
-  parola.displayClear();
+  for (uint8_t i = 0; i < MAX_ZONES; i++) {
+    parola.displayClear(i);
+  }
 }
 
 void loop() {
   server.handleClient();
   static uint32_t lastTime = millis();
   static uint8_t curZone = 0;
+  static bool flash = true;
 
   if (!isTimerStarted()) {
     return;
@@ -144,20 +147,25 @@ void loop() {
       displayPrepareCounter(tick);
     } else if (countInterval > 0) {
       int tick = counter % countInterval;
+      bool rest = tick > countWork || tick == 0;
       int started = tick > 0;
       // We want to display the full interval instead of zeroes
       int tickDisplay = started ? tick : countInterval;
-      displayUpTime(tickDisplay);
+      displayUpTime(tickDisplay, !rest && flash);
     } else {
-      displayUpTime(counter);
+      displayUpTime(counter, flash);
     }
     
     parola.displayReset(0);
   }
 
-  if (millis() - lastTime >= 1000) {
+  float diff = millis() - lastTime;
+  if (diff >= 1000) {
     lastTime = millis();
     counter++;
+    flash = true;
+  } else if (diff >= 500) {
+    flash = false;
   }
   
 }
@@ -170,10 +178,10 @@ void displayPrepareCounter(int tick) {
   sprintf(displayTime, "%d", tick);
 }
 
-void displayUpTime(int tick) {
+void displayUpTime(int tick, bool flash) {
   int seconds = tick % 60;
   int minutes = tick / 60;
-  sprintf(displayTime, "%02d:%02d", minutes, seconds);
+  sprintf(displayTime, "%02d%c%02d", minutes, (flash ? ':' : ' '), seconds);
 }
 
 void displayStartMessage() {
