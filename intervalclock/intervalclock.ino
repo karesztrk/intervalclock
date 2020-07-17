@@ -1,8 +1,9 @@
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
+#include <DNSServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include "ESPAsyncWebServer.h"
 #include "Font_Regular.h"
 #include "Font_3x7.h"
 #include "Html_page.h"
@@ -15,22 +16,42 @@
 #define CS_PIN    D8 // or SS
 
 MD_Parola parola = MD_Parola(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES); // Software spi
-ESP8266WebServer server;
+DNSServer dnsServer;
+AsyncWebServer server(80);
 
-const char* ssid     = "ESP8266-Access-Point";
-const char* password = "123456789";
+const char* ssid     = "";
+const char* password = "";
 
 uint8_t curText;
 char displayTime[9];    // mm:ss\0
 char displayInterval[3];
 
 int counter = -5;
-byte i = 0;
 bool started = false;
 unsigned int countType = 0;
 unsigned int countWork = 0;
 unsigned int countRest = 0;
 unsigned int countInterval = 30;
+
+class CaptiveRequestHandler : public AsyncWebHandler {
+public:
+  CaptiveRequestHandler() {}
+  virtual ~CaptiveRequestHandler() {}
+
+  bool canHandle(AsyncWebServerRequest *request){
+    return request->host().indexOf(WiFi.softAPIP().toString()) < 0;
+  }
+
+  void handleRequest(AsyncWebServerRequest *request) {
+    AsyncResponseStream *response = request->beginResponseStream("text/html");
+    response->print("<!DOCTYPE html><html><head><title>Garage Gym Timer</title></head><body>");
+    response->print("<p>This is the captive portal front page.</p>");
+    response->printf("<p>You were trying to reach: http://%s%s</p>", request->host().c_str(), request->url().c_str());
+    response->printf("<p>Try opening <a href='http://%s/settings'>Timer settings page</a> instead</p>", WiFi.softAPIP().toString().c_str());
+    response->print("</body></html>");
+    request->send(response);
+  }
+};
 
 void setup(){
   parola.begin(MAX_ZONES);
@@ -46,48 +67,36 @@ void setup(){
   parola.displayZoneText(0, displayTime, PA_RIGHT, 0, 0, PA_PRINT, PA_NO_EFFECT);
   parola.displayZoneText(1, displayInterval, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
 
-  WiFi.softAP(ssid, password, 5, false, 2);
   Serial.begin(115200);
   delay(10);
 
-  // Connect to WiFi network
-  Serial.println();
-  Serial.println();
-  Serial.println("Establishing Wifi Access Point...");
-  IPAddress ip = WiFi.softAPIP();
-  Serial.print("Acess Point IP address: ");
-  Serial.println(ip);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password, 5, false, 2);
 
-  server.on("/", HTTP_GET, handleIndex);
-  server.on("/start", HTTP_POST, handleStart);
-  server.on("/stop", HTTP_POST, handleStop);
-  server.onNotFound(handleNotFound);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+
+  dnsServer.start(53, "*", WiFi.softAPIP());
+  server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
+  server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
+    request -> send_P(200, "text/html", index_html);
+  });
+  server.on("/start", HTTP_POST, [](AsyncWebServerRequest *request){
+    int prepare = request->hasArg("prepare") ? request->arg("prepare").toInt() : 0;
+    int work = request->hasArg("work") ? request->arg("work").toInt() : 0;
+    int rest = request->hasArg("rest") ? request->arg("rest").toInt() : 0;
+    startTimer(prepare, work, rest);
+    request -> send(200, "text/plain", "OK");
+  });
+  server.on("/stop", HTTP_POST, [](AsyncWebServerRequest *request){
+    stopTimer();
+    request -> send(200, "text/plain", "OK");
+  });
+  server.onNotFound([](AsyncWebServerRequest *request){
+    request -> redirect("/");
+  });
   server.begin();
-}
-
-void handleIndex() {
-  String s = MAIN_page;
-  server.send(200, "text/html", s);
-}
-
-void handleStart() {
- int prepare = server.hasArg("prepare") ? server.arg("prepare").toInt() : 0;
- int work = server.hasArg("work") ? server.arg("work").toInt() : 0; 
- int rest = server.hasArg("rest") ? server.arg("rest").toInt() : 0; 
-
- startTimer(prepare, work, rest);
-
- server.send(200);
-}
-
-void handleStop() {
- stopTimer();
- server.send(200);
-}
-
-void handleNotFound() {
-  server.sendHeader("Location", "/", true);
-  server.send(302, "text/plane",""); 
 }
 
 bool isTimerStarted() {
@@ -110,7 +119,7 @@ void stopTimer() {
 }
 
 void loop() {
-  server.handleClient();
+  dnsServer.processNextRequest();
   static uint32_t lastTime = millis();
   static uint8_t curZone = 0;
   static bool flash = true;

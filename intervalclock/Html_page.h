@@ -1,4 +1,4 @@
-const char MAIN_page[] = R"=====(
+const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
@@ -462,4 +462,4 @@ const char MAIN_page[] = R"=====(
 </script>
 </body>
 </html>
-)=====";
+)rawliteral";
