@@ -55,7 +55,7 @@ public:
 
 void setup(){
   parola.begin(MAX_ZONES);
-  parola.setIntensity(4);
+  parola.setIntensity(3);
 
   parola.setZone(0, 0, 2); // timer
   parola.setZone(1, 3, 3); // counter
